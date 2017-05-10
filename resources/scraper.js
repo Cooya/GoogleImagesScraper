@@ -5,8 +5,11 @@ const baseUrl = "https://www.google.co.uk/search?tbm=isch&q=";
 var page = createPage();
 var requestCounter = 0;
 
+
 server.listen('127.0.0.1:8080', function(request, response) {
 	if(requestCounter++ >= 50) {
+		console.log('Clearing memory cache of web scraper...');
+        page.clearMemoryCache();
 		page.close();
 		page = createPage();
 		requestCounter = 0;
@@ -37,6 +40,7 @@ function createPage() {
 	};
 	page.settings.userAgent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36';
 	page.settings.loadImages = false;
+    page.settings.loadPlugins = false;
 	page.customHeaders = {'Accept-Language': 'en-US,en;q=0.5'};
 	return page;
 }
@@ -45,7 +49,7 @@ function getImage(entry, response) {
 	page.open(baseUrl + entry.keywords, function(status) {
 		try {
 			if(status !== "success") {
-				response.write('{"error": "unable to open the page"}');
+				response.write('{"error": "scraper_page_error"}');
 				response.close();
 			}
 			else {
@@ -60,7 +64,7 @@ function getImage(entry, response) {
 					response.close();
 				}
 				else {
-					response.write('{"error": "injection error"}');
+					response.write('{"error": "scraper_injection_error"}');
 					response.close();
 				}
 

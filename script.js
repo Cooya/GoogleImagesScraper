@@ -77,6 +77,10 @@ function runner() {
 	.catch(function(error) { // fatal error, end of program
 		if(error.error == 'scraper_down')
 			console.log('Web scraper down, end of process.');
+		else if(error.error == "scraper_page_error") {
+            console.log('The scraper is unable to retrieve the page, maybe due to a weak connection. Trying again...');
+            setTimeout(runner, 5000);
+        }
 		else {
 			console.error(error);
 			process.exit(1);
@@ -107,7 +111,7 @@ function runScraperServer() {
 				runner();
 			}
 			else
-				console.error(line);
+				console.log(line);
 	});
 }
 
@@ -127,7 +131,7 @@ function requestImageToScraper(entry) {
 				'Content-Length': Buffer.byteLength(entry)
 			}
 		}, (res) => {
-			let data = '';
+			var data = '';
 			res.on('data', (chunk) => { data += chunk; });
 			res.on('end', () => {
 				if(data == '')
