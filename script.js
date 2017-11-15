@@ -12,15 +12,15 @@ const phantomjs = require('phantomjs').path;
 const request = require('request');
 const xlsx = require('xlsx');
 
-const token = '97566f80492d7db12c11dc06e2db1664aadb67a3';
-//const token = 'da7333719f071a2bc37c8c947bd5be0a2a13fd69';
-const resourcesDir = 'resources/';
-const scraper = resourcesDir + 'scraper.js';
+const token = '26c57ff9717c63185e28c9d9680f701728d08b8e';
 const inputFile = process.argv[2];
 const columnToRead = process.argv[3].toUpperCase();
 const columnToWrite = process.argv[4].toUpperCase();
-const resultFile = resourcesDir + inputFile + '_result.json';
-const outputFile = path.basename(inputFile, path.extname(inputFile)) + '_out.xlsx';
+const scraper = 'resources/scraper.js';
+const outputDir = 'output/';
+const inputBasename = path.basename(inputFile, path.extname(inputFile));
+const resultFile = outputDir + inputBasename + '_out.json';
+const outputFile = outputDir + inputBasename + '_out.xlsx';
 const delay = 5000;
 
 var scraperProcess;
@@ -106,7 +106,13 @@ function runScraperServer() {
 		for(var line of data)
 			if(line == 'ok') { // server is ready
 				console.log('Web scraper ready.');
-				entries = getEntries(resourcesDir, inputFile, resultFile);
+
+				entries = getEntries(outputDir, inputFile, resultFile);
+				if(!entries.length) {
+					console.log('No entry to process, maybe the process is completed.');
+					process.exit(0);
+				}
+
 				entryIndex = 0;
 				runner();
 			}
@@ -163,6 +169,11 @@ function requestImageToScraper(entry) {
 }
 
 function readInputFile(file) {
+	if(!fileExists(file)) {
+		console.error('Input file "' + file + '" does not exist.');
+		process.exit(1);
+	}
+
 	var entries = [];
 	var sheet = xlsx.readFile(file).Sheets['Sheet1'];
 	var keys = Object.keys(sheet);
@@ -212,9 +223,9 @@ function recoverResultFile(resultFile) {
 	entryIndex = 0;
 }
 
-function getEntries(resourcesDir, inputFile, resultFile) {
-	if(!fileExists(resourcesDir))
-		fs.mkdirSync(resourcesDir);
+function getEntries(outputDir, inputFile, resultFile) {
+	if(!fileExists(outputDir))
+		fs.mkdirSync(outputDir);
 
 	if(!fileExists(resultFile)) {
 		console.log('No result file yet. Reading keywords spreadsheet...');
